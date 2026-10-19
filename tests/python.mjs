@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {loadPyodide} from 'pyodide';
 import {lessons} from '../site/assets/lessons.js';
+import {smokeCode} from '../site/assets/guidance-content.js';
 console.log('Loading pinned Python/NumPy/SciPy/Matplotlib runtime…');
 const py=await loadPyodide();
 await py.loadPackage(['numpy','scipy','matplotlib']);
@@ -19,6 +20,8 @@ os.makedirs('/test-output', exist_ok=True)
 os.chdir('/test-output')
 `);
 let failures=0;
+try{py.globals.set('_smoke',smokeCode);py.runPython("exec(compile(_smoke, 'setup-check.py', 'exec'), {})");console.log('PASS student setup-check code');}
+catch(error){failures++;console.log('FAIL setup check\n'+error.message);}
 for(const lesson of lessons){
   py.globals.set('_code',lesson.solution);py.globals.set('_checks',lesson.checks);py.globals.set('_starter',lesson.starter);
   const report=JSON.parse(py.runPython(`

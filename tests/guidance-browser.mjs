@@ -1,0 +1,63 @@
+import {chromium,expect} from '@playwright/test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {serve} from '../scripts/serve.mjs';
+import {smokeCode,colabUrl,localCommands} from '../site/assets/guidance-content.js';
+const server=await serve(0);
+const url=`http://127.0.0.1:${server.address().port}`;
+const executablePath=process.env.BROWSER_EXECUTABLE||(process.platform==='win32'?'C:/Program Files/Google/Chrome/Application/chrome.exe':undefined);
+const browser=await chromium.launch({headless:true,...(executablePath?{executablePath}:{})});
+const context=await browser.newContext({viewport:{width:1440,height:1050},reducedMotion:'reduce',permissions:['clipboard-read','clipboard-write']});
+const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+fs.mkdirSync('test-results',{recursive:true});
+try{
+  await page.goto(url+'/#orientation',{waitUntil:'domcontentloaded'});
+  await page.locator('#start-presentation').waitFor();
+  assert.equal(await page.locator('.agenda-item').count(),8);
+  await page.screenshot({path:'test-results/teacher-introduction.png',fullPage:true});
+  await page.locator('#start-presentation').click();
+  for(let i=1;i<=8;i++){
+    await page.waitForURL('**/#orientation/present/'+i);
+    await expect(page.locator('.slide-dots [aria-current]')).toHaveText(String(i));
+    await page.locator('.presenter-notes summary').click();
+    assert.ok((await page.locator('.presenter-notes p').first().innerText()).length>100);
+    if(i===5)assert.equal(await page.locator('.demo-link').getAttribute('href'),colabUrl(1));
+    if(i===3)await page.screenshot({path:'test-results/presentation-ode.png',fullPage:true});
+    if(i<8)await page.keyboard.press('ArrowRight');
+  }
+  await page.keyboard.press('Home');await expect(page.locator('.slide-dots [aria-current]')).toHaveText('1');
+  await page.keyboard.press('End');await expect(page.locator('.slide-dots [aria-current]')).toHaveText('8');
+  await page.keyboard.press('Escape');await page.waitForURL('**/#orientation');
+  await expect(page.locator('body')).not.toHaveClass(/presenting/);
+  const handout=await context.request.get(url+'/teacher-guide.html');assert.equal(handout.status(),200);assert.match(await handout.text(),/Print \/ save as PDF/);
+  console.log('PASS presentation: all eight parts, notes, keyboard controls, escape, printable handout');
+  await page.goto(url+'/#help/colab',{waitUntil:'domcontentloaded'});
+  for(const day of [1,2,3])assert.equal(await page.locator(`.colab-card:nth-child(${day}) a`).first().getAttribute('href'),colabUrl(day));
+  await page.locator('[data-copy="colab-smoke"]').click();
+  assert.equal((await page.evaluate(()=>navigator.clipboard.readText())).replaceAll('\r\n','\n'),smokeCode);
+  await page.goto(url+'/#help/local',{waitUntil:'domcontentloaded'});
+  await page.locator('[data-os="windows"]').click();
+  assert.equal(await page.locator('#windows-setup').textContent(),localCommands.windows);
+  await page.locator('[data-os="unix"]').click();assert.equal(await page.locator('[data-os-panel="windows"]').isVisible(),false);assert.equal(await page.locator('[data-os-panel="unix"]').isVisible(),true);
+  const requirements=await context.request.get(url+'/downloads/requirements-course.txt');assert.equal(requirements.status(),200);assert.match(await requirements.text(),/scipy==1\.14\.1/);
+  await page.goto(url+'/#help/faq',{waitUntil:'domcontentloaded'});
+  await page.locator('#faq-search').fill('NameError');assert.equal(await page.locator('[data-faq-group]:visible').count(),1);
+  await page.locator('#faq-search').fill('');await page.locator('[data-faq-filter="local"]').click();assert.ok(await page.locator('[data-faq-group="local"]:visible').count()>0);assert.equal(await page.locator('[data-faq-group="colab"]:visible').count(),0);
+  await page.locator('#faq-search').fill('no-such-question-123');assert.equal(await page.locator('#faq-empty').isVisible(),true);
+  await page.screenshot({path:'test-results/help-faq.png',fullPage:true});
+  console.log('PASS help: real notebook targets, clipboard, OS-specific commands, requirements download, FAQ search/filter');
+  // The guide's self-contained check must also run through the site's actual worker.
+  await page.goto(url+'/#python',{waitUntil:'domcontentloaded'});
+  await page.locator('#editor').fill(smokeCode);await page.locator('#run').click();
+  await page.waitForFunction(()=>!document.querySelector('#run').disabled,{},{timeout:180000});
+  assert.match(await page.locator('#output').innerText(),/2\.718282.*setup works/);
+  assert.equal(await page.locator('#output .error').count(),0);
+  await page.goto(url+'/#help/commands',{waitUntil:'domcontentloaded'});assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('presenting')),false);
+  await page.setViewportSize({width:390,height:844});await page.goto(url+'/#help/colab',{waitUntil:'domcontentloaded'});
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Help page must fit mobile viewport');
+  await page.locator('#menu').click();await page.locator('[data-guide="orientation"]').click();await page.waitForURL('**/#orientation');
+  await page.locator('#start-presentation').click();assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Presentation must fit mobile viewport');
+  await page.screenshot({path:'test-results/presentation-mobile.png',fullPage:true});
+  assert.deepEqual(errors,[]);
+  console.log('PASS guide setup check in browser Python, cross-page navigation, mobile layout, no JavaScript errors');
+}finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

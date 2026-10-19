@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import {lessons,days} from '../site/assets/lessons.js';
+import {slides,colabUrl,localCommands} from '../site/assets/guidance-content.js';
 
 test('the three-day curriculum has unique lessons, real source cells, and executable tasks',()=>{
   assert.equal(lessons.length,18);assert.equal(new Set(lessons.map(l=>l.id)).size,18);
@@ -40,4 +41,18 @@ test('all deployment paths are relative and packaged assets exist',()=>{
   assert.ok(fs.existsSync('dist/.nojekyll'));
   assert.ok(fs.existsSync('dist/source-manifest.json'));
   assert.doesNotMatch(html,/(?:href|src)="\/assets/);
+});
+test('teacher introduction lasts 20 minutes and setup artifacts target real student notebooks',()=>{
+  assert.equal(slides.reduce((sum,s)=>sum+s.minutes,0),20);
+  for(const slide of slides){assert.ok(slide.notes&&slide.demo&&slide.checkpoint);if(slide.link?.href.startsWith('#')&&!slide.link.href.startsWith('#help')&&slide.link.href!=='#resources')assert.ok(lessons.find(l=>'#'+l.id===slide.link.href));}
+  for(const day of [1,2,3]){
+    const target=new URL(colabUrl(day)).pathname.replace('/github/JohanLeNepvou/UAB-course/blob/main/','');
+    const notebook=JSON.parse(fs.readFileSync(target,'utf8'));
+    assert.match(notebook.cells[0].source.join(''),/Student exercises/);
+  }
+  assert.ok(!localCommands.windows.includes('Activate.ps1'));
+  const guide=fs.readFileSync('dist/teacher-guide.html','utf8');
+  assert.equal((guide.match(/<article>/g)||[]).length,8);
+  assert.ok(fs.existsSync('dist/downloads/requirements-course.txt'));
+  assert.ok(fs.existsSync('dist/downloads/setup-check.py'));
 });

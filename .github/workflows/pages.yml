@@ -23,6 +23,15 @@ jobs:
       - run: npm run build
       - run: npm test
       - run: npm run test:python
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: site/downloads/requirements-course.txt
+      - name: Install the documented local course environment
+        run: python -m pip install -r site/downloads/requirements-course.txt
+      - name: Verify native Python setup and portable notebooks
+        run: python tests/local_python.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

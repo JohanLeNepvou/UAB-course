@@ -1,4 +1,6 @@
 import {days, lessons} from './lessons.js';
+import {renderGuidance} from './guidance.js';
+import {colabUrl} from './guidance-content.js';
 
 const $ = s => document.querySelector(s);
 const escape = value => String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -26,17 +28,21 @@ function download(name,data,type='text/plain'){
   a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 let current=null,worker=null,busy=null,runtimeState='idle';
+let guidanceCleanup=null;
 const outputs=new Map();
 const outputUrls=[];
 function runtime(text,state){runtimeState=state;$('#runtime-status').textContent=text;$('#runtime-dot').className='status-dot '+state;}
 function navigation(){
+  document.querySelectorAll('[data-guide]').forEach(a=>{const active=location.hash.slice(1).split('/')[0]===a.dataset.guide;a.classList.toggle('active',active);if(active)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
   const count=Object.values(work.completed).filter(Boolean).length;
   $('#progress').value=count;$('#progress-text').textContent=`${count} / ${lessons.length}`;
   $('#course-nav').innerHTML=days.map(day=>`<section class="nav-day"><div class="nav-day-title">DAY ${day.n} · ${day.short.toUpperCase()}<span>${lessons.filter(l=>l.day===day.n&&work.completed[l.id]).length}/6</span></div>${lessons.filter(l=>l.day===day.n).map(l=>`<a class="nav-lesson ${current?.id===l.id?'active':''} ${work.completed[l.id]?'completed':''}" href="#${l.id}" ${current?.id===l.id?'aria-current="page"':''}><span class="num">${work.completed[l.id]?'✓':l.number}</span><span>${escape(l.title)}</span></a>`).join('')}</section>`).join('');
   $('#day-tabs').innerHTML=days.map(d=>`<a class="day-tab ${current?.day===d.n?'active':''}" href="#${lessons.find(l=>l.day===d.n).id}"><strong>0${d.n}</strong> ${escape(d.short)}</a>`).join('');
 }
 function render(){
+  guidanceCleanup?.();guidanceCleanup=null;
   const hash=decodeURIComponent(location.hash.slice(1)||'python');
+  if(hash==='orientation'||hash.startsWith('orientation/present/')||hash==='help'||hash.startsWith('help/')){current=null;guidanceCleanup=renderGuidance(hash,$('#lesson'),{toast});navigation();return;}
   if(hash==='resources'){current=null;renderResources();navigation();return;}
   const lesson=lessons.find(l=>l.id===hash);
   if(!lesson){location.hash='python';return;}
@@ -62,7 +68,7 @@ function render(){
     <section id="interpret" class="interpretation"><h3>Read the result as an engineer</h3><p>${escape(lesson.interpretation)}</p></section>
     ${lesson.quiz?`<section class="quiz"><div class="eyebrow" style="margin-bottom:12px">CHECK YOUR UNDERSTANDING</div><h3>${escape(lesson.quiz.question)}</h3><div class="quiz-options">${lesson.quiz.options.map((o,i)=>`<button data-answer="${i}">${escape(o)}</button>`).join('')}</div><p class="quiz-feedback" id="quiz-feedback" aria-live="polite"></p></section>`:''}
     <section class="submission"><h3>What to hand in</h3><p>${escape(lesson.deliverable)}</p></section>
-    <div class="source-reference"><span>↗</span><div>ADAPTED FROM <a href="course_source/${lesson.source}" download>${escape(lesson.source)}</a><br>Original zero-based cells ${lesson.cells.join(', ')}. <a href="#resources">Source notes, corrections & full notebooks</a></div></div>
+    <div class="source-reference"><span>↗</span><div>ADAPTED FROM <a href="course_source/${lesson.source}" download>${escape(lesson.source)}</a><br>Original zero-based cells ${lesson.cells.join(', ')}. <a href="#resources">Source notes, corrections & full notebooks</a><br><a href="${colabUrl(lesson.day)}" target="_blank" rel="noreferrer">Open this day’s student notebook in Google Colab ↗</a> · <a href="#help/colab">Setup instructions</a></div></div>
     <div class="lesson-footer"><label class="completion-label"><input type="checkbox" id="complete" ${work.completed[lesson.id]?'checked':''}> Mark lesson complete</label><div class="button-group">${index>0?`<a class="btn" href="#${lessons[index-1].id}">← Previous</a>`:''}<a class="btn primary" href="#${index<lessons.length-1?lessons[index+1].id:'resources'}">${index<lessons.length-1?'Next session →':'Course files →'}</a></div></div>`;
   const editor=$('#editor');editor.value=work.drafts[lesson.id]??lesson.starter;
   function sizeEditor(){const lines=editor.value.split('\n').length;$('#line-numbers').textContent=Array.from({length:lines},(_,i)=>i+1).join('\n');editor.style.height=`${Math.min(Math.max(lines*21.6+38,245),600)}px`;}
@@ -147,8 +153,9 @@ function showOutput(){
 function renderResources(){
   document.title='Course files & reference · UAB';$('#breadcrumb-day').textContent='RESOURCES';$('#breadcrumb-lesson').textContent='';
   $('#lesson').innerHTML=`<div class="eyebrow">THE COURSE WORKBENCH</div><div class="lesson-hero"><div><h1>Course files & reference</h1><p>Executable notebooks, original sources, and the numerical details behind this three-day course.</p></div></div>
+  <div class="guide-actions"><a class="btn" href="#orientation">Teacher introduction · 20 minutes</a><a class="btn" href="#help/colab">Google Colab setup</a><a class="btn" href="#help/local">Local Python setup</a><a class="btn" href="#help/faq">FAQ & commands</a></div>
   <div class="resource-grid">
-  ${days.map(d=>`<section class="resource-card"><h2>Day ${d.n} · ${escape(d.short)}</h2><p>${escape(d.description)}</p><a class="btn primary" download href="notebooks/day${d.n}.ipynb">↓ Student notebook</a><a class="btn" download href="notebooks/day${d.n}-solutions.ipynb">↓ Worked solutions</a><p>${escape(d.outcome)}</p></section>`).join('')}
+  ${days.map(d=>`<section class="resource-card"><h2>Day ${d.n} · ${escape(d.short)}</h2><p>${escape(d.description)}</p><a class="btn primary" href="${colabUrl(d.n)}" target="_blank" rel="noreferrer">Open in Colab ↗</a><a class="btn" download href="notebooks/day${d.n}.ipynb">↓ Student notebook</a><a class="btn" download href="notebooks/day${d.n}-solutions.ipynb">↓ Worked solutions</a><p>${escape(d.outcome)}</p></section>`).join('')}
   <section class="resource-card"><h2>Keep your work</h2><p>Code and completion are saved in this browser. Export a backup to move to another laptop or browser. Import restores editable code; it never executes it.</p><button class="btn primary" id="export-work">↓ Export work</button><button class="btn" id="import-work">↑ Import work</button><input type="file" id="work-file" accept="application/json,.json" hidden><p class="storage-note">${storageAvailable?'Browser storage is available.':'Browser storage is unavailable; export to keep changes.'} Files and plots in Python memory reset between runs. Each exercise runs independently.</p></section>
   <section class="resource-card wide"><h2>Schedule & deliverables</h2><p>Each day has 300 minutes of guided practical work. Suggested teaching day: 09:00–16:00, with 60 minutes for lunch, 30 minutes of breaks, and 30 minutes for discussion. The six session durations are estimates; use the final lab to consolidate unfinished work.</p><div class="table-scroll"><table><thead><tr><th>Day</th><th>Practical sequence</th><th>Evidence of learning</th></tr></thead><tbody>${days.map(d=>`<tr><td>${d.n}</td><td>${lessons.filter(l=>l.day===d.n).map(l=>escape(l.title)).join(' → ')}</td><td>${escape(d.outcome)}</td></tr>`).join('')}</tbody></table></div></section>
   <section class="resource-card wide"><h2>Run locally or in a notebook service</h2><p>Browser exercises need a network connection for the first Python and scientific-package download. No Python installation or student account is required. On a restricted network, ask for access to <code>cdn.jsdelivr.net</code>. The page fonts have local fallbacks.</p><p>The downloadable day notebooks embed the exact model support files. Open them in Jupyter or upload them to Google Colab, run their first setup cell, then work through the exercises. For local Python install <code>numpy scipy matplotlib jupyterlab</code>. Run exercise cells before their check cells. Solution notebooks are separately labelled.</p><p>Use <strong>Stop / restart Python</strong> for a long-running cell. The runner isolates each execution: imports and variables do not carry between lessons. Code edits persist; generated CSV/PNG files should be downloaded before another run.</p></section>
@@ -172,5 +179,6 @@ function renderResources(){
 }
 $('#menu').onclick=()=>{const open=$('#sidebar').classList.toggle('open');$('#menu').setAttribute('aria-expanded',String(open));};
 document.addEventListener('click',event=>{if(event.target.closest('.sidebar a')){$('#sidebar').classList.remove('open');$('#menu').setAttribute('aria-expanded','false');}});
-window.addEventListener('hashchange',()=>{render();window.scrollTo({top:0,behavior:'instant'});});
-render();
+function positionRoute(){const section=location.hash.match(/^#help\/(workflow|colab|local|commands|faq)$/)?.[1];if(section)document.getElementById('help-'+section)?.scrollIntoView({behavior:'instant'});else window.scrollTo({top:0,behavior:'instant'});}
+window.addEventListener('hashchange',()=>{render();positionRoute();});
+render();positionRoute();
