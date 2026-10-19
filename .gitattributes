@@ -1,0 +1,5 @@
+* text=auto eol=lf
+# Preserve exact source bytes and SHA-256 hashes across operating systems.
+site/course_source/** -text -whitespace
+*.png binary
+*.ipynb -text

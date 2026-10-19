@@ -1,0 +1,14 @@
+{
+  "name": "uab-python-fermentation-course",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "node scripts/serve.mjs",
+    "test": "node --test tests/course.test.mjs",
+    "test:python": "node tests/python.mjs",
+    "test:browser": "node tests/browser.mjs"
+  },
+  "devDependencies": { "@playwright/test": "1.56.1", "pyodide": "0.27.7" }
+}
