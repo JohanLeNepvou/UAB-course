@@ -12,23 +12,18 @@
 <body>
   <a class="skip" href="#main">Skip to lesson</a>
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <a class="brand" href="#python" aria-label="UAB course home"><span class="brand-mark">U<span>AB</span></span><span class="brand-description">ENGINEERING<br>COMPUTATION LAB</span></a>
-    <div class="course-name">Python for chemical &<br>biochemical engineering</div>
-    <div class="course-meta">3 DAYS <span>·</span> 18 PRACTICAL SESSIONS</div>
-    <nav class="course-guides" aria-label="Getting started and support"><a href="#orientation" data-guide="orientation">▶ &nbsp; Teacher introduction <span>20 MIN</span></a><a href="#help" data-guide="help">? &nbsp; Help & setup <span>COLAB · LOCAL</span></a></nav>
-    <div class="progress-label"><span>Your course progress</span><strong id="progress-text">0 / 18</strong></div>
-    <progress id="progress" max="18" value="0" aria-label="Completed lessons"></progress>
+    <div class="institution-logos" aria-label="DTU and Universitat Autònoma de Barcelona"><a href="https://www.dtu.dk/english" target="_blank" rel="noreferrer"><img src="assets/dtu-logo.png" alt="DTU" width="39" height="56"></a><a href="https://www.uab.cat/" target="_blank" rel="noreferrer"><img src="assets/uab-logo.svg" alt="Universitat Autònoma de Barcelona" width="128" height="58"></a><button class="sidebar-close icon-button" id="close-menu" aria-label="Close navigation">×</button></div>
+    <nav class="course-guides" aria-label="Getting started and support"><a href="#orientation" data-guide="orientation">Start here</a><a href="#help" data-guide="help">Help & setup</a></nav>
     <nav id="course-nav" aria-label="Days and lessons"></nav>
-    <div class="sidebar-footer"><a href="#resources" id="resources-link">↗ &nbsp; Course files & reference</a><p>Based on YeastFermentation<br>Days 1, 2 & 3 · Johan Le Nepvou De Carfort</p></div>
+    <div class="sidebar-footer"><a href="#resources" id="resources-link">Course files</a><div class="progress-label"><span>Progress</span><strong id="progress-text">0 / 18</strong></div><progress id="progress" max="18" value="0" aria-label="Completed lessons"></progress></div>
   </aside>
   <div class="workspace">
-    <header class="topbar"><div class="breadcrumb"><button class="mobile-menu icon-button" id="menu" aria-label="Toggle course navigation" aria-expanded="false">☰</button><span>UAB COURSE</span><span class="slash">/</span><span id="breadcrumb-day">DAY 1</span><span class="slash">/</span><span id="breadcrumb-lesson">01</span></div><div class="runtime"><span class="status-dot" id="runtime-dot"></span><span id="runtime-status" role="status">Python loads when you run</span></div></header>
+    <header class="topbar"><div class="breadcrumb"><button class="mobile-menu icon-button" id="menu" aria-label="Toggle course navigation" aria-expanded="false">☰</button><span class="course-title">Python for engineering</span><span id="breadcrumb-day">Day 1</span><span id="breadcrumb-lesson">01</span></div><div class="runtime" hidden><span class="status-dot" id="runtime-dot"></span><span id="runtime-status" role="status"></span></div></header>
     <main id="main" tabindex="-1">
-      <div class="day-tabs" id="day-tabs" aria-label="Choose a course day"></div>
       <div id="lesson"></div>
-      <footer class="page-footer"><span>UAB · Chemical & biochemical engineering</span><span>Model. Solve. Verify.</span></footer>
     </main>
   </div>
+  <button class="nav-backdrop" id="nav-backdrop" aria-label="Close navigation" hidden></button>
   <div id="toast" role="status" class="toast" hidden></div>
   <script type="module" src="assets/app.js"></script>
 </body>

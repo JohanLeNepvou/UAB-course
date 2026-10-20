@@ -6,9 +6,11 @@ Course: **https://johanlenepvou.github.io/UAB-course/**
 
 Teachers: **[20-minute introduction](https://johanlenepvou.github.io/UAB-course/#orientation)** · Students: **[Help & setup](https://johanlenepvou.github.io/UAB-course/#help)**
 
-The teacher section includes eight timed presentation parts, keyboard navigation, speaker notes, live demonstrations, student checkpoints, and a printable teaching handout. It introduces the site workflow and moving to a personal Google Colab notebook. This opening activity is separate from the practical-session timings below.
+The introduction has eight short, student-facing slides with keyboard navigation. Detailed timing, teacher notes, demonstrations, and checkpoints are kept in the separate printable teaching handout. It introduces Python, the site workflow, and moving to a personal Google Colab notebook. This opening activity is separate from the practical-session timings below.
 
 Help provides direct Colab links to the three student notebooks, an execution/saving walkthrough, optional local Python 3.12/JupyterLab setup for Windows and macOS/Linux, downloadable requirements, copyable commands, and searchable FAQ/error guidance. Site drafts and notebook copies are separate; no synchronization or submission service is implied.
+
+The sidebar uses official DTU and UAB logo assets (sources recorded in `site/assets/branding.json`) and groups lessons by day. Help shows one topic at a time; solutions, command snippets, and source notes expand when needed. The numerical models, exercises, original source files, and stored student drafts are preserved.
 
 ## Teaching sequence
 
@@ -54,6 +56,8 @@ Open `http://127.0.0.1:4173`. The browser must load the page over HTTP, not as a
 `npm run test:python` runs every solution and check in the exact pinned browser Python runtime, confirms each starter needs completion, compares teaching/source derivatives, checks solver convergence and feed boundaries, and executes all three exported solution notebooks.
 
 `npm run test:browser` uses Playwright with an installed Chrome on Windows (or set `BROWSER_EXECUTABLE`), and runs all 18 solutions through the actual browser worker. On Linux install Playwright's Chromium first. Screenshots are written to ignored `test-results/`.
+
+Browser regressions reuse the exact pinned Pyodide artifacts cached by `test:python` when available, avoiding repeated large downloads. The guide browser check also exercises the normal CDN-loading path.
 
 `npm run test:guides` checks the teacher presentation, notes and keyboard controls, Colab notebook targets, clipboard commands, platform-specific setup tabs, FAQ search and filtering, mobile layout, and the help setup check in the real browser Python runtime. The build generates `site/teacher-guide.html` and `site/downloads/setup-check.py` from the same content as the site.
 

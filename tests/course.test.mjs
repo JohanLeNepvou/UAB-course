@@ -52,7 +52,7 @@ test('teacher introduction lasts 20 minutes and setup artifacts target real stud
   }
   assert.ok(!localCommands.windows.includes('Activate.ps1'));
   const guide=fs.readFileSync('dist/teacher-guide.html','utf8');
-  assert.equal((guide.match(/<article>/g)||[]).length,8);
+  assert.equal((guide.match(/<article\b/g)||[]).length,8);
   assert.ok(fs.existsSync('dist/downloads/requirements-course.txt'));
   assert.ok(fs.existsSync('dist/downloads/setup-check.py'));
 });

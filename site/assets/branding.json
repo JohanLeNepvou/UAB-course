@@ -1,0 +1,12 @@
+{
+  "dtu-logo.png": {
+    "source": "https://www.dtu.dk/english/about/profile/dtus-visual-identity",
+    "asset": "DTU_Logo_Corporate_Red_RGB.png",
+    "description": "Original corporate red RGB logo from DTU's official logo archive."
+  },
+  "uab-logo.svg": {
+    "source": "https://www.uab.cat/ca/identitatcorporativa/versio-principal-logotip",
+    "archive": "https://www.uab.cat/ca/identitatcorporativa/doc/logotip-versio-1-principal-verd-svg.zip",
+    "description": "Original principal logo in corporate green from UAB's official logo archive."
+  }
+}

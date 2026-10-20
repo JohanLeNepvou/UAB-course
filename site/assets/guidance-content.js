@@ -15,67 +15,7 @@ print("Python:", sys.version.split()[0])
 print("NumPy / SciPy / Matplotlib:", np.__version__, scipy.__version__, matplotlib.__version__)
 print("y(1) =", round(sol.y[0, -1], 6), "— setup works")`;
 
-export const slides = [
-  { minutes:2, title:'Three days, one engineering workflow',
-    lead:'Turn a balance into Python, solve it, and check whether the result deserves your trust.',
-    html:`<div class="slide-day-grid"><div><strong>DAY 1</strong><h2>Write & verify ODEs</h2><p>Python, solve_ivp, reversible reactions, and convergence.</p></div><div><strong>DAY 2</strong><h2>Balance & control</h2><p>Tank dynamics, P/PI control, and oxygen-limited growth.</p></div><div><strong>DAY 3</strong><h2>Simulate fermentation</h2><p>Nine states, feeding, inhibition, variability, and sensitivity.</p></div></div><div class="equation">Balance → derivative → solver → physical & numerical checks</div>`,
-    notes:`Tell students: “By the end, you should be able to write and solve a basic engineering ODE and explain how you checked it.” The case study grows from a scalar derivative to the original yeast fermentation model. Emphasize state order and units from the beginning. A smooth curve is evidence of a calculation, not yet evidence of a correct model. The course follows YeastFermentation Days 1–3; the source notebook and cells are linked in every session.`,
-    demo:'Point to the three day tabs and the final capstone in the sidebar. Ask students to name one quantity that could be an ODE state.',
-    checkpoint:'Students can name a state, its unit, and a reason to check a numerical answer.' },
-  { minutes:2, title:'Use a lesson from top to bottom',
-    lead:'Read the model before changing the code. Finish by explaining the result.',
-    html:`<ol class="slide-steps"><li><strong>Read:</strong> identify states, parameters, units, and initial conditions.</li><li><strong>Predict:</strong> sketch the direction of change or calculate a limiting result.</li><li><strong>Implement:</strong> edit the TODO and select Run Python.</li><li><strong>Verify:</strong> select Run & check; read a failing assertion as feedback.</li><li><strong>Interpret:</strong> write the requested engineering explanation and save your work.</li></ol><p class="slide-callout">A green check tests the code. The written deliverable tests your reasoning.</p>`,
-    notes:`Open a lesson and locate the theory, task, editor, output, hint, solution, and hand-in requirement. Starter exercises are intentionally incomplete, so an initial failed check is expected. Run Python executes the code; Run & check executes the same code and then its assertions. Passing checks marks the lesson complete; students can also mark it manually. Neither action submits work to a teacher. Agree on your institution’s submission route before the course. Encourage students to predict, try, use a hint, and only then inspect a solution.`,
-    demo:'Open the first ODE lesson in another tab. Point out Run Python, Run & check, the hint, and What to hand in.',
-    link:{href:'#first-ode',label:'Open the ODE lesson for the live demo'},
-    checkpoint:'Students can distinguish running code, checking it, and handing in the written work.' },
-  { minutes:3, title:'Live demo: a derivative is not the next state',
-    lead:'The first ODE is dy/dt = y with y(0) = 1. We know the answer before running Python.',
-    html:`<div class="equation">dy/dt = y &nbsp; → &nbsp; y(t) = exp(t) &nbsp; → &nbsp; y(1) ≈ 2.718282</div><pre class="slide-code">def rhs(t, y):
-    return [y[0]]
-
-sol = solve_ivp(rhs, (0, 1), [1.], rtol=1e-8, atol=1e-10)
-assert sol.success
-assert np.isclose(sol.y[0, -1], np.e, rtol=1e-6)</pre><p><code>sol.y[0]</code> is the first state's trajectory. The function returns its derivative.</p>`,
-    notes:`Use the prepared first-ODE tab. Run the starter, whose derivative is zero, and show that a solver can finish successfully while solving the wrong equation. Run & check should fail. Replace the derivative with [y[0]], then rerun and compare the numerical and exact trajectories. Explain that the derivative function receives the current state from the solver. It does not manually advance time. The checks compare the answer with exp(t); sol.success alone cannot establish that the intended equation was implemented. The slide snippet assumes the NumPy and solve_ivp imports already present in the exercise.`,
-    demo:'Run the wrong derivative, inspect the failed assertion, change one line, then rerun. Point to the analytical comparison and the terminal value.',
-    link:{href:'#first-ode',label:'Run the first-ODE demonstration'},
-    checkpoint:'Ask: “If sol.success is True, could the model still be wrong?” Expected answer: yes.' },
-  { minutes:3, title:'Check engineering structure, not only a plot',
-    lead:'In the reversible reaction A ⇌ B, every loss from A is a gain to B.',
-    html:`<div class="equation">dA/dt = −k₁A + k₂B<br>dB/dt = +k₁A − k₂B<br>d(A + B)/dt = 0</div><div class="slide-day-grid"><div><strong>INITIAL CONDITION</strong><h2>A + B = 4 mol/L</h2><p>A₀ = 3, B₀ = 1.</p></div><div><strong>EQUILIBRIUM</strong><h2>Aeq = 8/3 mol/L</h2><p>k₁ = 1, k₂ = 2 h⁻¹.</p></div><div><strong>NUMERICS</strong><h2>Refine & compare</h2><p>Check tolerances and conserved totals.</p></div></div>`,
-    notes:`Add the two balances on the board: the reaction terms cancel. This gives a test independent of the numerical method. At equilibrium k1*A equals k2*B, and the total remains four. Students should later use this pattern for tank volumes and fed-batch amount balances. Distinguish verifying the implementation from validating biology against data. A conservation check can find a sign error but cannot prove that all chosen kinetic laws describe a real organism. Ask whether doubling both rate constants changes the equilibrium; it changes the speed, not the ratio.`,
-    demo:'Show the coupled-reaction lesson and its conservation residual. Ask students to identify which derivative sign makes the total constant.',
-    link:{href:'#isomerization',label:'Open the coupled-reaction lesson'},
-    checkpoint:'Students can explain why A+B is a stronger check than “the curves look reasonable.”' },
-  { minutes:4, title:'Move to your own Google Colab notebook',
-    lead:'Keep the course open for instructions; work in a personal day notebook for your report.',
-    html:`<ol class="slide-steps"><li>Open the Day 1 student notebook with <strong>Open in Colab</strong>.</li><li>Sign in and choose <strong>File → Save a copy in Drive</strong>. Rename your copy.</li><li>Connect to a Python runtime; use CPU / no hardware accelerator.</li><li>Run the first support-file setup cell. It creates the model helper files.</li><li>Run imports and exercise cells in order; use <strong>Shift+Enter</strong> to execute a selected cell.</li></ol><p class="slide-callout">Use the student notebook. The worked-solution notebook is a separate reference.</p>`,
-    notes:`Demonstrate the direct Day 1 link and save a personal copy before making edits. The public GitHub notebook is the starting template; students do not need to push to the course repository. Point out the Connect control, a code cell, a text cell, and the execution button. The first setup cell contains the model files, so beginners do not need to clone a repository or mount Drive. CPU execution is sufficient for the course examples. Show the equivalent upload route in the help section if a direct link fails. Students should already be signed in before this four-minute segment; if an account is blocked, they can continue on the course site.`,
-    demo:'Save and rename a copy, connect, run the setup cell, then run the first exercise. Show where a student adds an explanatory text cell.',
-    link:{href:colabUrl(1),label:'Open Day 1 in Google Colab'},
-    checkpoint:'Students have a named personal notebook and have executed its setup cell.' },
-  { minutes:2, title:'Know what survives the next run',
-    lead:'The course site starts each execution fresh. A notebook keeps variables until its kernel restarts.',
-    html:`<div class="table-scroll"><table><thead><tr><th>This site</th><th>Colab / Jupyter</th></tr></thead><tbody><tr><td>Each execution uses a fresh namespace.</td><td>Executed cells share the active kernel's variables.</td></tr><tr><td>Imports are included in each exercise.</td><td>Run setup and imports before dependent cells.</td></tr><tr><td>Run & check reruns the edited code and tests.</td><td>Run the edited exercise cell, then its check cell.</td></tr><tr><td>Stop / restart Python terminates the worker.</td><td>Interrupt a running cell; rerun setup after a restart.</td></tr></tbody></table></div>`,
-    notes:`Demonstrate a notebook NameError by referring to a variable before running the cell that defines it. Cell position is not execution order: changing a parameter cell has no effect until it is rerun. After changing a derivative, rerun the solve and plot cells too. If a runtime restarts, recreate support files and rerun imports. Once a completed notebook is ready, restart its kernel and run it from top to bottom to check reproducibility. Do not start an incomplete student notebook with Run all: its first intentional assertion failure will interrupt the sequence.`,
-    demo:'Change a parameter, rerun its definition, rerun the solve, then rerun the check. Explain why an old output may still show an old result.',
-    checkpoint:'Students can explain a NameError and know which cells to rerun after changing a parameter.' },
-  { minutes:2, title:'Save code, notebooks, and generated files separately',
-    lead:'A notebook, a browser backup, and a CSV are different deliverables.',
-    html:`<div class="table-scroll"><table><thead><tr><th>Work</th><th>How to keep it</th></tr></thead><tbody><tr><td>Site edits & completion</td><td>Course files → Export work → JSON backup.</td></tr><tr><td>Personal Colab notebook</td><td>Save in Drive; download an .ipynb copy for hand-in.</td></tr><tr><td>CSV data & PNG plots</td><td>Download the generated file before the runtime resets.</td></tr><tr><td>Engineering reasoning</td><td>Add labelled plots, units, assumptions, and interpretation to the notebook.</td></tr></tbody></table></div><p class="slide-callout">Site drafts and Colab copies do not synchronize. Transfer edited code explicitly.</p>`,
-    notes:`Show the site's Export work control. That JSON restores site drafts; it is not a Jupyter notebook. Download the current exercise as .py if moving a specific implementation, then paste its code into the corresponding notebook cell. In Colab, saving a notebook preserves notebook content, not every CSV on the temporary runtime filesystem. Demonstrate downloading one generated file from the Files panel, or show the files.download helper. The notebook and data files belong together in the final submission. The teacher should specify the actual hand-in system; this site does not collect submissions.`,
-    demo:'Show a JSON backup and a student .ipynb download. Explain which one opens in Colab and which one restores site drafts.',
-    link:{href:'#resources',label:'Open course files and backup controls'},
-    checkpoint:'Students know which file to use to resume editing and which files to submit.' },
-  { minutes:2, title:'Two-minute readiness check',
-    lead:'Run a known ODE in your chosen environment, then explain the answer to your neighbour.',
-    html:`<ol class="slide-steps"><li>Run the setup-check code in Help & setup.</li><li>Confirm it reports <strong>y(1) = 2.718282</strong> and displays the package versions.</li><li>Explain what the derivative returns and why this particular answer can be checked.</li><li>Locate the Day 1 exercise, the help page, and your saved notebook or backup.</li></ol><div class="equation">Ready? Start with Python → ODEs → balances → verification.</div>`,
-    notes:`Ask students to run the shared setup check rather than install software during this final segment. The check uses dy/dt=y, so it exercises NumPy, SciPy, imports, and a known numerical answer without depending on the fermentation support files. Students on the site can paste it into an exercise editor and choose Run Python, not Run & check, because lesson checks expect that lesson's variables. Colab/local students add a code cell. Check for two common blockers: missing imports and a notebook setup cell that was never run. Students can use the help FAQ or continue in the browser while an account or local setup issue is resolved.`,
-    demo:'Open Help & setup → Google Colab, copy the setup check, and have students run it. Finish by returning to Day 1.',
-    link:{href:'#help/colab',label:'Open the setup check and student guide'},
-    checkpoint:'Every student has one working Python environment and can locate their work.' }
-];
+export {slides} from './presentation.js';
 
 export const commandGroups = [
   {id:'smoke',label:'Verify the scientific Python environment',where:'Site: Run Python · Colab/Jupyter: code cell',code:smokeCode},
